@@ -8,7 +8,7 @@ class ImageModule(nn.Module):
 
     def __init__(self):
         super(ImageModule, self).__init__()
-        self.image_size=512
+        self.image_size=128
 
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2)
         self.bn1 = nn.BatchNorm2d(32)
@@ -18,7 +18,7 @@ class ImageModule(nn.Module):
         self.bn2 = nn.BatchNorm2d(32)
         self.relu2 = nn.ReLU()
         
-        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1, padding=2)
         self.bn3 = nn.BatchNorm2d(64)
         self.relu3 = nn.ReLU()
         
@@ -26,7 +26,7 @@ class ImageModule(nn.Module):
         self.bn4 = nn.BatchNorm2d(64)
         self.relu4 = nn.ReLU()
 
-        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2)
         self.bn5 = nn.BatchNorm2d(128)
         self.relu5 = nn.ReLU()
         
@@ -34,7 +34,7 @@ class ImageModule(nn.Module):
         self.bn6 = nn.BatchNorm2d(128)
         self.relu6 = nn.ReLU()
         
-        self.conv7 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=5, stride=1, padding=2)
         self.bn7 = nn.BatchNorm2d(256)
         self.relu7 = nn.ReLU()
         
@@ -42,10 +42,10 @@ class ImageModule(nn.Module):
         self.bn8 = nn.BatchNorm2d(256)
         self.relu8 = nn.ReLU()
         
-        self.fc1 = nn.Linear(1024, 512)
+        self.fc1 = nn.Linear(256, 256)
         self.relu_fc1 = nn.ReLU()
         
-        self.fc2 = nn.Linear(512, 512)
+        self.fc2 = nn.Linear(256, 256)
         self.relu_fc2 = nn.ReLU()
         
         self.max_pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -63,7 +63,7 @@ class ImageModule(nn.Module):
         x = self.bn2(x)
         x = self.relu2(x)
 
-        x = self.max_pool4(x)
+        x = self.max_pool2(x)
 
         x = self.conv3(x)
         x = self.bn3(x)
@@ -94,7 +94,6 @@ class ImageModule(nn.Module):
         x = self.relu8(x)
         x = self.max_pool4(x)
 
-
         x = x.view(x.size(0), -1)
 
 
@@ -112,7 +111,7 @@ class FullyConnectedModule(nn.Module):
         super(FullyConnectedModule, self).__init__()
         
         self.fc1 = nn.Linear(input_size, output_size)
-        self.relu1 = nn.ReLU()
+        self.relu1 = nn.LeakyReLU()
         self.dropout1 = nn.Dropout(p=dropout)
 
         
@@ -129,17 +128,25 @@ class imitationModel(nn.Module):
         super(imitationModel, self).__init__()
         
         self.image_module = ImageModule()
-        self.fc_module1 = FullyConnectedModule(516, 1032, dropout=0)
-        self.fc_module2 = FullyConnectedModule(1032, 1032, dropout=0.1)
-        self.fc_module2 = FullyConnectedModule(1032, 516, dropout=0.1)
-        self.fc_module3 = FullyConnectedModule(516, 40,dropout=0)
+        self.fc_module1 = FullyConnectedModule(512, 1024, dropout=0)
+        self.fc_module2 = FullyConnectedModule(1024, 512, dropout=0)
+        self.fc_module3 = FullyConnectedModule(512, 40,dropout=0)
+
+        self.fc_module_goal_1 = FullyConnectedModule(4, 256,dropout=0)
+        self.fc_module_goal_2 = FullyConnectedModule(256, 256,dropout=0)
 
         
     def forward(self, img, goal, current_pose):
-
+        
         img_tensor = self.image_module(img)
+        
+        goal_and_pose = torch.cat((goal, current_pose), dim=1)
 
-        x = torch.cat((img_tensor, goal, current_pose), dim=1)
+        goal_and_pose=self.fc_module_goal_1(goal_and_pose)
+        goal_and_pose=self.fc_module_goal_2(goal_and_pose)
+
+
+        x = torch.cat((img_tensor, goal_and_pose), dim=1)
 
         x = x.to(torch.float)
         x = self.fc_module1(x)
