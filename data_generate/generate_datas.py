@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from astar import DynamicAstar
-from astar import RESOLUTION,POS,G
+from .astar import DynamicAstar
+from .astar import RESOLUTION,POS,G
 import curses, random
 import math
 from pathfinding import Grid
 import matplotlib.pyplot as plt
-from collision import *
+from .collision import *
 from tqdm import tqdm
 
 gen_data_number=5000
@@ -21,7 +21,7 @@ def randomObstacle():
 
     # 随机生成障碍物的位置和半径
     obstacle_coords = [(random.uniform(0, bound_box_x), random.uniform(0, bound_box_y)) for _ in range(num_obstacles)]
-    obstacle_ra = [random.uniform(1.2, 4) for _ in range(num_obstacles)]  ##障碍物 半径
+    obstacle_ra = [random.uniform(1.2, 3) for _ in range(num_obstacles)]  ##障碍物 半径
 
     barriers=[]
     for i in range(num_obstacles):
@@ -30,11 +30,11 @@ def randomObstacle():
     return barriers
 
 def main():
-    iter_num=0
+    iter_num=4349
 
 
 
-    for epoch in tqdm(range(gen_data_number),total=gen_data_number):
+    for epoch in tqdm(range(gen_data_number)):
 
         mygrid=Grid()
         mygrid.barriers=randomObstacle()
@@ -44,10 +44,10 @@ def main():
 
         
         pathPlanner.setStart((0,0))
-        pathPlanner.setGoal((random.uniform(0, bound_box_x), random.uniform(0, bound_box_y)))
+        pathPlanner.setGoal((random.uniform(0, bound_box_x), random.uniform(0, bound_box_y/4)))
 
 
-        path,succues,nodes = pathPlanner.pathPlan(0, 2000)
+        path,succues,nodes = pathPlanner.pathPlan(0, 1000)
 
         if not succues :
             continue
@@ -64,7 +64,6 @@ def main():
 
         plot_experiment(avoidance.get_init_path(),opt_path_,mygrid.barriers,number=iter_num)
         iter_num+=1
-
 
 
 if __name__ == "__main__":

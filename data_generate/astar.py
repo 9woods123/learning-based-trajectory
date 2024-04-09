@@ -32,6 +32,10 @@ class DynamicAstar:
         RESOLUTION=resolution
         self.__grid=gird
         self.__reachGoalRadius=radius
+        self.minX=0
+        self.maxX=25
+        self.minY=0
+        self.maxY=25
 
         self.__MotionPrimitives=[(minStepLength,0),
                                             (-minStepLength,0),
@@ -80,7 +84,8 @@ class DynamicAstar:
             temp_y=y+motionInput[1]
             ##  rangeOut check & collision check 
             if not self.collision_detection((x,y),(temp_x,temp_y)):
-                    nextPoints.append((temp_x, temp_y))
+                    if(self.minX<temp_x<self.maxX and self.minY<temp_y<self.maxY):
+                        nextPoints.append((temp_x, temp_y))
 
         return nextPoints
 
@@ -138,7 +143,7 @@ class DynamicAstar:
                 neighbor_g = current[G] + self.cost(current[POS], neighbor_pos)
                 neighbor_index= self.position2Index(neighbor_pos)
                 neighbor = nodes.get(neighbor_index)
-
+                
                 if neighbor_index not in nodes:
                     if len(nodes) >= limit:
                         continue

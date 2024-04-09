@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-
-from astar import DynamicAstar
-from astar import RESOLUTION,POS,G
+from .astar import DynamicAstar
+from .astar import RESOLUTION,POS,G
 import curses, random
 import math
 
 import matplotlib.pyplot as plt
-from collision import *
+from .collision import *
 
 
 map_data = [
@@ -23,7 +22,7 @@ def distance_point_to_line(px, py, x1, y1, x2, y2):
 
     # 计算点到直线的距离
     num = abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1)
-    den = ((y2 - y1)**2 + (x2 - x1)**2)**0.5
+    den = math.sqrt((y2 - y1)**2 + (x2 - x1)**2)+0.0001
     return num / den
 
 def is_inside_circle(x, y, h, k, r):

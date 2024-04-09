@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-from wayPoint import wayPoint
+from .wayPoint import wayPoint
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -310,3 +310,4 @@ def plot_experiment(init_path,opt_path,grid_barriar,number=-1):
     file_name= 'traj_'+str(number)+'.txt'
     save_path = os.path.join(save_traj_result_dir,file_name)
     np.savetxt(save_path, np.column_stack((opt_path_coords_x, opt_path_coords_y)), delimiter='\t')
+

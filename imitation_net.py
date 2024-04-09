@@ -3,9 +3,6 @@ import torch.nn as nn
 
 class ImageModule(nn.Module):
 
-
-
-
     def __init__(self):
         super(ImageModule, self).__init__()
         self.image_size=128
@@ -42,16 +39,15 @@ class ImageModule(nn.Module):
         self.bn8 = nn.BatchNorm2d(256)
         self.relu8 = nn.ReLU()
         
-        self.fc1 = nn.Linear(256, 256)
+        self.fc1 = nn.Linear(256, 128)
         self.relu_fc1 = nn.ReLU()
         
-        self.fc2 = nn.Linear(256, 256)
+        self.fc2 = nn.Linear(128, 64)
         self.relu_fc2 = nn.ReLU()
         
         self.max_pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.max_pool4 = nn.MaxPool2d(kernel_size=4, stride=4)
 
-        
 
     def forward(self, x):
 
@@ -94,8 +90,7 @@ class ImageModule(nn.Module):
         x = self.relu8(x)
         x = self.max_pool4(x)
 
-        x = x.view(x.size(0), -1)
-
+        x = x.view(x.size(0), -1).contiguous()
 
         x = self.fc1(x)
         x = self.relu_fc1(x)
@@ -107,18 +102,18 @@ class ImageModule(nn.Module):
 
 
 class FullyConnectedModule(nn.Module):
-    def __init__(self, input_size, output_size, dropout=0.5):
+    def __init__(self, input_size, output_size, relu_type="LeakyReLU"):
         super(FullyConnectedModule, self).__init__()
         
         self.fc1 = nn.Linear(input_size, output_size)
-        self.relu1 = nn.LeakyReLU()
-        self.dropout1 = nn.Dropout(p=dropout)
-
+        if relu_type=="LeakyReLU":
+            self.relu1 = nn.LeakyReLU()
+        if relu_type=="Sigmoid":
+            self.relu1 = nn.Sigmoid()
         
     def forward(self, x):
         x = self.fc1(x)
         x = self.relu1(x)
-        x = self.dropout1(x)
 
         return x
 
@@ -128,30 +123,35 @@ class imitationModel(nn.Module):
         super(imitationModel, self).__init__()
         
         self.image_module = ImageModule()
-        self.fc_module1 = FullyConnectedModule(512, 1024, dropout=0)
-        self.fc_module2 = FullyConnectedModule(1024, 512, dropout=0)
-        self.fc_module3 = FullyConnectedModule(512, 40,dropout=0)
+        self.fc_module1 = FullyConnectedModule(128, 256)
+        self.fc_module2 = FullyConnectedModule(256, 256)
+        self.fc_module3 = FullyConnectedModule(256, 256)
+        self.fc_module4 = FullyConnectedModule(256, 256)
+        self.fc_module5 = FullyConnectedModule(256, 40, relu_type="Sigmoid")
 
-        self.fc_module_goal_1 = FullyConnectedModule(4, 256,dropout=0)
-        self.fc_module_goal_2 = FullyConnectedModule(256, 256,dropout=0)
+        self.fc_module_goal_1 = FullyConnectedModule(2, 64)
+        self.fc_module_goal_2 = FullyConnectedModule(64, 64)
+        self.fc_module_goal_3 = FullyConnectedModule(64, 64)
+        self.fc_module_goal_4 = FullyConnectedModule(64, 64)
 
         
-    def forward(self, img, goal, current_pose):
+
+    def forward(self, img, goal):
         
         img_tensor = self.image_module(img)
-        
-        goal_and_pose = torch.cat((goal, current_pose), dim=1)
 
-        goal_and_pose=self.fc_module_goal_1(goal_and_pose)
-        goal_and_pose=self.fc_module_goal_2(goal_and_pose)
+        goal=self.fc_module_goal_1(goal)
+        goal=self.fc_module_goal_2(goal)
+        goal=self.fc_module_goal_3(goal)
+        goal=self.fc_module_goal_4(goal)
 
+        x = torch.cat((img_tensor, goal), dim=1)
 
-        x = torch.cat((img_tensor, goal_and_pose), dim=1)
-
-        x = x.to(torch.float)
         x = self.fc_module1(x)
         x = self.fc_module2(x)
         x= self.fc_module3(x)
+        x= self.fc_module4(x)
+        x= self.fc_module5(x)
 
         return x
 

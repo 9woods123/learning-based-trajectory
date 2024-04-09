@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from PIL import Image 
 import matplotlib.pyplot as plt
 
-norm_factor=1.0/5
+norm_factor=1.0/4
 
 
 class MapTrajDataset(Dataset):
@@ -17,33 +17,35 @@ class MapTrajDataset(Dataset):
         images_dir,
         traj_dir,
         image_size=128,
+        id_start=0,
+        id_end=1000
     ):
 
         image_root_path = 'data_generate/data/map/'
         traj_path='data_generate/data/traj_data/'
         print("=====================MapTrajDataset  Load======================")
         self.image_slices = []
-        self.traj_x_slices = []
-        self.traj_y_slices = []
-        self.traj_slices = []
+
+        self.traj_du_slices = []
+        self.traj_pos_slices = []
 
         self.goal_slices=[]
         self.curr_pose_slices=[]
-        load_data_number=2000
+        load_data_number=id_end-id_start+1
 
-        count=0
 
-        for file_number in range(load_data_number):
+        for index in range(load_data_number):
 
-            count+=1
-            if count>load_data_number:
+            if index>load_data_number:
                 break
 
-            image_path = image_root_path + 'map_'+str(file_number)+'.png'
-            traj_data_path = traj_path + 'traj_'+str(file_number)+'.txt'
+            file_id=index+id_start
+
+            image_path = image_root_path + 'map_'+str(file_id)+'.png'
+            traj_data_path = traj_path + 'traj_'+str(file_id)+'.txt'
             # print("image_path:",image_path)
             # print("traj_data_path:",traj_data_path)
-
+            # print("image_path:",image_path)
 
             # ===========================读取图片===============================
 
@@ -61,36 +63,38 @@ class MapTrajDataset(Dataset):
             # 将灰度图像添加到图像列表中
             self.image_slices.append(gray_array_normalized)
 
-
             # ===========================读取轨迹===============================
             loaded_data = np.loadtxt(traj_data_path, delimiter='\t')
             loaded_x_coords = loaded_data[:20, 0]  
             loaded_y_coords = loaded_data[:20, 1]
 
+            traj_pos_true = np.concatenate([loaded_x_coords, loaded_y_coords])
+            traj_pos_true=np.asarray(traj_pos_true)
+
             delta_x = np.diff(np.asarray(loaded_x_coords) )
             delta_y = np.diff(np.asarray(loaded_y_coords) )
 
-            traj_true=[]
-            traj_true.append(0.0)
-            traj_true.append(0.0)
+            traj_du_true=[]
+            traj_du_true.append(loaded_x_coords[0]-0)
+            traj_du_true.append(loaded_y_coords[0]-0)
 
             for  i in  range(len(delta_x)):
-                    traj_true.append(delta_x[i])
-                    traj_true.append(delta_y[i])
+                    traj_du_true.append(delta_x[i])
+                    traj_du_true.append(delta_y[i])
 
-            traj_true= np.asarray(traj_true)
+            traj_du_true= np.asarray(traj_du_true)
             goal= np.asarray([loaded_data[-1,0],loaded_data[-1,1]])
             curr_p= np.asarray([0.0,0.0])
 
-            self.traj_slices.append(traj_true)
+            traj_du_true=traj_du_true*norm_factor
+            traj_pos_true=traj_pos_true*norm_factor
+
+            self.traj_du_slices.append(traj_du_true)
             self.goal_slices.append(goal)
             self.curr_pose_slices.append(curr_p)
-    
-        print("=====================  Load Ready ======================")
-        # print("traj_slices:",self.traj_slices)
-        # print("goal_slices:",self.goal_slices)
-# goal_slices: [(24.75, 12.0), (0.0, 19.5), (20.25, 3.75), (1.5, 16.5), (20.25, 23.25), (18.75, 20.25)]
+            self.traj_pos_slices.append(traj_pos_true)
 
+        print("=====================  Load Ready ======================")
 
     def __len__(self):
         return len(self.image_slices)
@@ -101,10 +105,9 @@ class MapTrajDataset(Dataset):
         image = self.image_slices[idx] 
         image = np.expand_dims(image, axis=0)
         
-        # print("image",image)
         image = image.astype(np.float32)
 
-        traj_true=self.traj_slices[idx]
+        traj_du_true=self.traj_du_slices[idx]
 
         goal =self.goal_slices[idx]
         curr=self.curr_pose_slices[idx]
@@ -112,5 +115,9 @@ class MapTrajDataset(Dataset):
         goal = goal.astype(np.float32)
         curr = curr.astype(np.float32)
 
+        traj_pos_true=self.traj_pos_slices[idx]
 
-        return image, goal, curr, traj_true
+
+        return image, goal, curr, traj_du_true,traj_pos_true
+
+
