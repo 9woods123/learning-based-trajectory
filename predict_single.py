@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import time 
 # from train import TrajLoss
 
-test_data_index=5009
+test_data_index=0
 traj_path='data_generate/data/traj_data/traj_'+ str(test_data_index)+ '.txt'
 loaded_data = np.loadtxt(traj_path, delimiter='\t')
 image_path = 'data_generate/data/map/' + 'map_'+str(test_data_index)+'.png'
@@ -39,7 +39,7 @@ def plot_experiment(traj_pred_x,traj_pred_y):
 
 img_size = (128, 128)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-my_model = torch.load("model/epoch_989.pth").to(device)
+my_model = torch.load("model/epoch_929.pth").to(device)
 my_model.eval()  # 设置模型为评估模式
 print("device:",device)
 
@@ -85,8 +85,10 @@ norm_factor=1.0/4
 
 output=[data/norm_factor  for data in output[0]]
 
-output_dx=output[::2]
-output_dy=output[1::2]
+half_index = int(len(output) / 2)
+
+output_dx = output[:half_index]
+output_dy = output[half_index:]
 
 output_x=[sum(output_dx[:i]) for i in range(len(output_dx))]
 output_y=[sum(output_dy[:i]) for i in range(len(output_dy))]

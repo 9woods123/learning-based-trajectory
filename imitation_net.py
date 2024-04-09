@@ -127,7 +127,7 @@ class imitationModel(nn.Module):
         self.fc_module2 = FullyConnectedModule(256, 256)
         self.fc_module3 = FullyConnectedModule(256, 256)
         self.fc_module4 = FullyConnectedModule(256, 256)
-        self.fc_module5 = FullyConnectedModule(256, 40, relu_type="Sigmoid")
+        self.fc_module5 = FullyConnectedModule(256, 41, relu_type="Sigmoid")
 
         self.fc_module_goal_1 = FullyConnectedModule(2, 64)
         self.fc_module_goal_2 = FullyConnectedModule(64, 64)

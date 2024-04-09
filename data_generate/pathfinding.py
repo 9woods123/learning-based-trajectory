@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from .astar import DynamicAstar
-from .astar import RESOLUTION,POS,G
+from astar import DynamicAstar
+from astar import RESOLUTION,POS,G
 import curses, random
 import math
 
 import matplotlib.pyplot as plt
-from .collision import *
+from collision import *
 
 
 map_data = [

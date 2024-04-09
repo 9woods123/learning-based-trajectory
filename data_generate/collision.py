@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-from .wayPoint import wayPoint
+from wayPoint import wayPoint
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,7 +129,7 @@ class ObstacleAvoidance:
         alpha = 0.1  # You might need to adjust this based on your requirements
         
         total_cost=0
-
+        
         while iterations < max_iterations:
             for i in range(2, path_length - 2):
                 xim2 = np.array([new_path[i - 2].x(), new_path[i - 2].y(), new_path[i - 2].z()])
@@ -224,7 +224,7 @@ class ObstacleAvoidance:
 ###################################  main and  plot  #########################################
 
 
-def plot_experiment(init_path,opt_path,grid_barriar,number=-1):
+def plot_experiment(init_path,opt_path,grid_barriar,collision_cost,number=-1):
 
     init_path_coords_x = np.array([point.x() for point in init_path])
     init_path_coords_y = np.array([point.y() for point in init_path])
@@ -311,3 +311,9 @@ def plot_experiment(init_path,opt_path,grid_barriar,number=-1):
     save_path = os.path.join(save_traj_result_dir,file_name)
     np.savetxt(save_path, np.column_stack((opt_path_coords_x, opt_path_coords_y)), delimiter='\t')
 
+    save_cost_result_dir='data/collision_cost'
+    os.makedirs(save_cost_result_dir, exist_ok=True)
+    file_name= 'cost_'+str(number)+'.txt'
+    collision_cost_array = np.array([collision_cost])
+    save_path = os.path.join(save_cost_result_dir,file_name)
+    np.savetxt(save_path, collision_cost_array, delimiter='\t')

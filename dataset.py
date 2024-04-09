@@ -8,26 +8,29 @@ import matplotlib.pyplot as plt
 
 norm_factor=1.0/4
 
+collision_norm_factor=1.0/15
 
 class MapTrajDataset(Dataset):
     
 
     def __init__(
         self,
-        images_dir,
-        traj_dir,
+        image_root_path,
+        traj_root_path,
+        collision_root_path,
         image_size=128,
         id_start=0,
         id_end=1000
     ):
 
-        image_root_path = 'data_generate/data/map/'
-        traj_path='data_generate/data/traj_data/'
+
+
         print("=====================MapTrajDataset  Load======================")
         self.image_slices = []
 
         self.traj_du_slices = []
         self.traj_pos_slices = []
+        self.collision_slices = []
 
         self.goal_slices=[]
         self.curr_pose_slices=[]
@@ -42,10 +45,8 @@ class MapTrajDataset(Dataset):
             file_id=index+id_start
 
             image_path = image_root_path + 'map_'+str(file_id)+'.png'
-            traj_data_path = traj_path + 'traj_'+str(file_id)+'.txt'
-            # print("image_path:",image_path)
-            # print("traj_data_path:",traj_data_path)
-            # print("image_path:",image_path)
+            traj_data_path = traj_root_path + 'traj_'+str(file_id)+'.txt'
+            collision_data_path = collision_root_path + 'cost_'+str(file_id)+'.txt'
 
             # ===========================读取图片===============================
 
@@ -89,10 +90,17 @@ class MapTrajDataset(Dataset):
             traj_du_true=traj_du_true*norm_factor
             traj_pos_true=traj_pos_true*norm_factor
 
+            # ===========================读取碰撞代价==============================
+            cost_true = np.loadtxt(collision_data_path, delimiter='\t')
+            cost_true=cost_true*collision_norm_factor
+            print("cost_true",cost_true)
+
+
             self.traj_du_slices.append(traj_du_true)
             self.goal_slices.append(goal)
             self.curr_pose_slices.append(curr_p)
             self.traj_pos_slices.append(traj_pos_true)
+            self.collision_slices.append(cost_true)
 
         print("=====================  Load Ready ======================")
 
@@ -117,7 +125,10 @@ class MapTrajDataset(Dataset):
 
         traj_pos_true=self.traj_pos_slices[idx]
 
+        collision_cost_true= self.collision_slices[idx]
 
-        return image, goal, curr, traj_du_true,traj_pos_true
+
+
+        return image, goal, curr, traj_du_true,traj_pos_true,collision_cost_true
 
 
